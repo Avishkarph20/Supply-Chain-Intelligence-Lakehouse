@@ -1,0 +1,111 @@
+{
+    "name": "pl_ingest_sensor_readings",
+    "properties": {
+        "activities": [
+            {
+                "name": "set_v_ingest_date",
+                "type": "SetVariable",
+                "dependsOn": [],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "v_ingest_date",
+                    "value": {
+                        "value": "@if(\n    equals(pipeline().parameters.p_ingest_date, ''),\n    formatDateTime(utcNow(), 'yyyy-MM-dd'),\n    pipeline().parameters.p_ingest_date\n)",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "copy_sensor_readings_to_landing",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "set_v_ingest_date",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "BinarySource",
+                        "storeSettings": {
+                            "type": "HttpReadSettings",
+                            "requestMethod": "GET"
+                        },
+                        "formatSettings": {
+                            "type": "BinaryReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "BinarySink",
+                        "storeSettings": {
+                            "type": "AzureBlobFSWriteSettings"
+                        }
+                    },
+                    "enableStaging": false
+                },
+                "inputs": [
+                    {
+                        "referenceName": "ds_http_binary_file_param",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "p_relative_url": {
+                                "value": "@pipeline().parameters.p_source_relative_url",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "ds_adls_binary_file_param",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "p_file_system": "iot-berkeley-lab",
+                            "p_directory": "@concat('landing/sensor_readings/ingest_date=', variables('v_ingest_date'))",
+                            "p_file_name": "@pipeline().parameters.p_sink_file_name"
+                        }
+                    }
+                ]
+            }
+        ],
+        "parameters": {
+            "p_ingest_date": {
+                "type": "string"
+            },
+            "p_file_system": {
+                "type": "string",
+                "defaultValue": "iot-berkeley-lab"
+            },
+            "p_source_relative_url": {
+                "type": "string",
+                "defaultValue": "/labdata/data.txt.gz"
+            },
+            "p_sink_file_name": {
+                "type": "string",
+                "defaultValue": "data.txt.gz"
+            }
+        },
+        "variables": {
+            "v_ingest_date": {
+                "type": "String"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2026-06-10T03:33:19Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,134 @@
+{
+    "name": "pl_master_ingestion",
+    "properties": {
+        "activities": [
+            {
+                "name": "set_v_ingest_date",
+                "type": "SetVariable",
+                "dependsOn": [],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "v_ingest_date",
+                    "value": {
+                        "value": "@if(\n    equals(pipeline().parameters.p_ingest_date, ''),\n    formatDateTime(utcNow(), 'yyyy-MM-dd'),\n    pipeline().parameters.p_ingest_date\n)",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "exec_pl_ingest_sensor_readings",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "set_v_ingest_date",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "pl_ingest_sensor_readings",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "p_ingest_date": {
+                            "value": "@variables('v_ingest_date')",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "exec_pl_ingest_sensor_metadata",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "set_v_ingest_date",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "pl_ingest_sensor_metadata",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "p_ingest_date": {
+                            "value": "@variables('v_ingest_date')",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "exec_pl_validate_landing_files",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "exec_pl_ingest_sensor_metadata",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "exec_pl_ingest_sensor_readings",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "pl_ingest_sensor_readings",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "p_ingest_date": {
+                            "value": "@variables('v_ingest_date')",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "p_ingest_date": {
+                "type": "string"
+            },
+            "p_file_system": {
+                "type": "string",
+                "defaultValue": "iot-berkeley-lab"
+            }
+        },
+        "variables": {
+            "v_ingest_date": {
+                "type": "String"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2026-06-10T17:56:07Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

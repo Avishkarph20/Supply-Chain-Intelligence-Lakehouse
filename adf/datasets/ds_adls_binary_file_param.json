@@ -1,0 +1,41 @@
+{
+    "name": "ds_adls_binary_file_param",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "ls_adls_iot_berkeley_lab",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "p_file_system": {
+                "type": "string",
+                "defaultValue": "iot-berkeley-lab"
+            },
+            "p_directory": {
+                "type": "string"
+            },
+            "p_file_name": {
+                "type": "string"
+            }
+        },
+        "annotations": [],
+        "type": "Binary",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobFSLocation",
+                "fileName": {
+                    "value": "@dataset().p_file_name",
+                    "type": "Expression"
+                },
+                "folderPath": {
+                    "value": "@dataset().p_directory",
+                    "type": "Expression"
+                },
+                "fileSystem": {
+                    "value": "@dataset().p_file_system",
+                    "type": "Expression"
+                }
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,12 @@
+{
+    "name": "ls_adls_iot_berkeley_lab",
+    "type": "Microsoft.DataFactory/factories/linkedservices",
+    "properties": {
+        "annotations": [],
+        "type": "AzureBlobFS",
+        "typeProperties": {
+            "url": "https://saiotberkeley.dfs.core.windows.net/"
+        },
+        "description": "Connection to ADLS Gen2 landing, bronze, silver, gold, rejected and logs zones for IoT Berkeley Lab project."
+    }
+}
